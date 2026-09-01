@@ -5,7 +5,7 @@ on:
     branches:
       - "main"
       - "develop"
-      - "feature/camera2d-basic" # <--- Seu branch adicionado aqui
+      - "feature/camera2d-basic" # Adicionado seu branch aqui
   pull_request:
   schedule:
     - cron: "0 0 * * *" # Run daily at midnight
@@ -29,42 +29,29 @@ env:
 jobs:
 
   repo-check:
-    # Trava removida aqui para permitir rodar no seu fork pessoal
+    # Removida a trava do Catroid original para rodar no seu perfil
     name: Repo Check
     runs-on: ubuntu-latest
     steps:
       - run: echo "This workflow was triggered in the ${{ github.repository }} repo!"
 
+  build:
+    needs: repo-check
+    name: Build APK
+    runs-on: ubuntu-latest
+    env:
+      WEB_TEST_URL: ${{ inputs.WEB_TEST_URL != '' && format('-PwebTestUrl=''{0}''', inputs.WEB_TEST_URL) || '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Setup JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
-        id: setup-java-21 # <--- Adicione um ID para capturar o caminho exato
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Set up Android SDK
-        if: ${{ env.ACT }} 
-        uses: android-actions/setup-android@v2
-
-      - name: Build APK
-        run: ./gradlew -Dorg.gradle.java.home="${{ steps.setup-java-21.outputs.path }}" ${{ env.WEB_TEST_URL }} -Pindependent='#${{ github.run_number }} ${{ github.ref_name }}' assembleCatroidDebug
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: catroid-debug-apk
-          path: "**/build/outputs/apk/catroid/debug/*.apk"
-
-
-          run: ./gradlew ${{ env.WEB_TEST_URL }} -Pindependent='#${{ github.run_number }} ${{ github.ref_name }}' assembleCatroidDebug ${{ env.ALL_FLAVOURS_PARAMETERS }}
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-
+          update-alternatives: true # Força o Java 21 no sistema operacional inteiro
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -74,7 +61,8 @@ jobs:
         uses: android-actions/setup-android@v2
 
       - name: Build APK
-        run: ./gradlew ${{ env.WEB_TEST_URL }} -Pindependent='#${{ github.run_number }} ${{ github.ref_name }}' assembleCatroidDebug ${{ env.ALL_FLAVOURS_PARAMETERS }}
+        # Comando limpo focado apenas na versão de testes (Debug)
+        run: ./gradlew ${{ env.WEB_TEST_URL }} -Pindependent='#${{ github.run_number }} ${{ github.ref_name }}' assembleCatroidDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -93,7 +81,6 @@ jobs:
       checks: write
     env:
       WEB_TEST_URL: ${{ inputs.WEB_TEST_URL != '' && format('-PwebTestUrl=''{0}''', inputs.WEB_TEST_URL) || '' }}
-      ALL_FLAVOURS_PARAMETERS: ${{ inputs.BUILD_ALL_FLAVOURS && 'assembleCreateAtSchoolDebug assembleLunaAndCatDebug assemblePhiroDebug assembleEmbroideryDesignerDebug assemblePocketCodeBetaDebug assembleMindstormsDebug' || '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -104,6 +91,7 @@ jobs:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
+          update-alternatives: true
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -148,6 +136,7 @@ jobs:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
+          update-alternatives: true
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
