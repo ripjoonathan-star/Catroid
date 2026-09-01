@@ -51,13 +51,16 @@ jobs:
         uses: android-actions/setup-android@v2
 
       - name: Build APK
-        # Passamos a variável do próprio componente setup-java direto para o Gradle
-        run: ./gradlew ${{ env.WEB_TEST_URL }} -Dorg.gradle.java.home="${{ steps.setup-java-21.outputs.path }}" -Pindependent='#${{ github.run_number }} ${{ github.ref_name }}' assembleCatroidDebug ${{ env.ALL_FLAVOURS_PARAMETERS }}
+        run: ./gradlew -Dorg.gradle.java.home="${{ steps.setup-java-21.outputs.path }}" ${{ env.WEB_TEST_URL }} -Pindependent='#${{ github.run_number }} ${{ github.ref_name }}' assembleCatroidDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
+        with:
+          name: catroid-debug-apk
+          path: "**/build/outputs/apk/catroid/debug/*.apk"
 
-        run: ./gradlew ${{ env.WEB_TEST_URL }} -Pindependent='#${{ github.run_number }} ${{ github.ref_name }}' assembleCatroidDebug ${{ env.ALL_FLAVOURS_PARAMETERS }}
+
+          run: ./gradlew ${{ env.WEB_TEST_URL }} -Pindependent='#${{ github.run_number }} ${{ github.ref_name }}' assembleCatroidDebug ${{ env.ALL_FLAVOURS_PARAMETERS }}
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
